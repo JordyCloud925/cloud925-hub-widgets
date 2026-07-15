@@ -161,12 +161,12 @@
     quo: {
       name: "Quo",
       setup: [
-        "Log in to Quo and open <strong>Calls</strong> from the left sidebar.",
-        "Set the date range you want to import. For a first import, start with one week so you can verify the mapping before pulling months of history.",
-        "Click <strong>Export</strong> and choose <strong>CSV</strong>. The file lands in your downloads.",
-        "Open the CSV once and confirm the column headers match the field mapping table below before you import anything."
+        "In Quo, open <strong>Settings</strong>, then <strong>Data and privacy</strong>, and request a <strong>Calls export</strong>. Quo emails you a CSV rather than downloading in the browser.",
+        "For automated methods, generate an API key under <strong>Settings</strong>, then <strong>API</strong>. API access requires a Business plan.",
+        "Quo timestamps are in UTC. Decide now whether you want Airtable to display local time and set the field's time zone accordingly.",
+        "Confirm the export includes all phone numbers on the account, not just your own line, if teammates share the workspace."
       ],
-      map: { date: "created_at", direction: "direction", from: "from_number", to: "to_number", contact: "contact_name", duration: "duration", result: "status" }
+      map: { date: "createdAt", direction: "direction", from: "from", to: "to", contact: "contactName", duration: "duration", result: "status" }
     },
     dialpad: {
       name: "Dialpad",
@@ -177,16 +177,6 @@
         "For the automated methods, you will also need an API key from <strong>Admin Settings</strong>, then <strong>Authentication</strong>, then <strong>API Keys</strong>."
       ],
       map: { date: "date_started", direction: "direction", from: "external_number", to: "internal_number", contact: "contact_name", duration: "duration", result: "call_state" }
-    },
-    openphone: {
-      name: "OpenPhone",
-      setup: [
-        "In OpenPhone, open <strong>Settings</strong>, then <strong>Data and privacy</strong>, and request a <strong>Calls export</strong>. OpenPhone emails you a CSV rather than downloading in the browser.",
-        "For automated methods, generate an API key under <strong>Settings</strong>, then <strong>API</strong>. API access requires a Business plan.",
-        "OpenPhone timestamps are in UTC. Decide now whether you want Airtable to display local time and set the field's time zone accordingly.",
-        "Confirm the export includes all phone numbers on the account, not just your own line, if teammates share the workspace."
-      ],
-      map: { date: "createdAt", direction: "direction", from: "from", to: "to", contact: "contactName", duration: "duration", result: "status" }
     },
     ringcentral: {
       name: "RingCentral",
@@ -245,9 +235,8 @@
     { q: "The same call shows up twice.", a: "Add a formula field combining date, from, and to as a unique key, then use a de-dupe extension or filter to catch repeats. Overlapping export date ranges are the usual cause." }
   ];
   var TROUBLE_SEL1 = {
-    quo: { q: "The Quo export is missing older calls.", a: "Quo exports respect the date range picker exactly. Widen the range and re-export rather than assuming the file contains full history." },
+    quo: { q: "Quo call times look off by several hours.", a: "Quo exports timestamps in UTC. Set the Airtable date field to display your local time zone instead of editing the values." },
     dialpad: { q: "The Dialpad CSV never downloaded.", a: "Larger Dialpad exports are emailed as a download link instead of saving directly. Check the inbox on your admin account, including spam." },
-    openphone: { q: "OpenPhone call times look off by several hours.", a: "OpenPhone exports timestamps in UTC. Set the Airtable date field to display your local time zone instead of editing the values." },
     ringcentral: { q: "RingCentral history does not go back far enough.", a: "RingCentral retains call logs for a limited window depending on your plan. Set a monthly recurring export so the archive lives in Airtable going forward." }
   };
   var TROUBLE_SEL2 = {
