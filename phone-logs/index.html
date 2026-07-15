@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importing phone logs into Airtable</title>
+<style>
+  :root {
+    --c-primary: #a2cffe;
+    --c-deep: #044487;
+    --c-rich: #055bb5;
+    --c-soft: #d6eaff;
+    --c-callout-bg: #f4f9ff;
+    --c-ink: #1c2b3a;
+    --c-muted: #5b6b7c;
+    --c-line: #e3eefb;
+    --c-white: #ffffff;
+    --shadow: 0 2px 14px rgba(4, 68, 135, 0.08);
+    --radius: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--font);
+    color: var(--c-ink);
+    background: var(--c-white);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  .page-head h1 {
+    font-size: 28px; font-weight: 700; color: var(--c-deep);
+    margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  .page-head p { margin: 0 0 28px; color: var(--c-muted); font-size: 16px; }
+
+  .selector-card {
+    background: var(--c-callout-bg); border: 1px solid var(--c-line);
+    border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .selector-group { margin-bottom: 20px; }
+  .selector-group:last-child { margin-bottom: 0; }
+  .selector-label {
+    display: block; font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--c-rich); margin-bottom: 10px;
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pill {
+    appearance: none; border: 1.5px solid var(--c-primary); background: var(--c-white);
+    color: var(--c-deep); font-family: var(--font); font-size: 14px; font-weight: 500;
+    padding: 9px 18px; border-radius: 999px; cursor: pointer; transition: all 0.15s ease;
+  }
+  .pill:hover { background: var(--c-soft); }
+  .pill[aria-pressed="true"] { background: var(--c-rich); border-color: var(--c-rich); color: var(--c-white); }
+
+  .empty-state { margin-top: 36px; text-align: center; padding: 56px 24px; color: var(--c-muted); }
+  .empty-state .arrow { font-size: 32px; color: var(--c-primary); display: block; margin-bottom: 12px; }
+  .empty-state p { margin: 0; font-size: 17px; font-weight: 500; color: var(--c-rich); }
+
+  #guide { margin-top: 36px; }
+  .guide-summary { font-size: 14px; color: var(--c-muted); margin-bottom: 18px; }
+  .guide-summary strong { color: var(--c-deep); }
+
+  .card {
+    background: var(--c-white); border: 1px solid var(--c-line); border-radius: var(--radius);
+    padding: 26px 28px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card h2 { font-size: 19px; font-weight: 700; color: var(--c-deep); margin: 0 0 16px; letter-spacing: -0.01em; }
+  .card ol, .card ul { margin: 0; padding-left: 22px; }
+  .card ol li, .card ul li { margin-bottom: 12px; }
+  .card code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px; background: var(--c-soft); color: var(--c-deep); padding: 2px 6px; border-radius: 5px;
+  }
+
+  .map-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .map-table th {
+    background: var(--c-soft); color: var(--c-deep); text-align: left; font-weight: 600;
+    padding: 11px 14px; border: 1px solid var(--c-line);
+  }
+  .map-table td { padding: 11px 14px; border: 1px solid var(--c-line); vertical-align: top; }
+  .map-table td code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12.5px; background: var(--c-callout-bg); color: var(--c-rich);
+    padding: 2px 6px; border-radius: 5px; white-space: nowrap;
+  }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .callout {
+    border-left: 4px solid var(--c-primary); background: var(--c-callout-bg);
+    padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0 0; font-size: 14px;
+  }
+  .callout.gotcha { border-left-color: var(--c-rich); }
+  .callout .tag {
+    display: block; font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--c-rich); margin-bottom: 4px;
+  }
+
+  .trouble-item { margin-bottom: 16px; }
+  .trouble-item:last-child { margin-bottom: 0; }
+  .trouble-item .q { font-weight: 600; color: var(--c-deep); margin: 0 0 4px; }
+  .trouble-item .a { margin: 0; color: var(--c-ink); }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 24px 16px 64px; }
+    .page-head h1 { font-size: 23px; }
+    .card { padding: 20px 18px; }
+    .selector-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <h1>Importing phone logs into Airtable</h1>
+    <p>Pick your phone system and your import method to get a tailored walkthrough with field mapping and troubleshooting.</p>
+  </div>
+
+  <div class="selector-card">
+    <div class="selector-group">
+      <span class="selector-label">Phone system</span>
+      <div class="pills" id="sel-1"></div>
+    </div>
+    <div class="selector-group">
+      <span class="selector-label">Import method</span>
+      <div class="pills" id="sel-2"></div>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty">
+    <span class="arrow">&uarr;</span>
+    <p>Make your selections above</p>
+  </div>
+
+  <div id="guide"></div>
+</div>
+
+<script>
+(function () {
+  /* ============================================================
+     DATA
+     ============================================================ */
+
+  var DEST_FIELDS = [
+    { key: "date",      dest: "Call Date and Time" },
+    { key: "direction", dest: "Direction" },
+    { key: "from",      dest: "From Number" },
+    { key: "to",        dest: "To Number" },
+    { key: "contact",   dest: "Contact Name" },
+    { key: "duration",  dest: "Duration (seconds)" },
+    { key: "result",    dest: "Call Result" }
+  ];
+
+  var SEL1 = {
+    quo: {
+      name: "Quo",
+      setup: [
+        "Log in to Quo and open <strong>Calls</strong> from the left sidebar.",
+        "Set the date range you want to import. For a first import, start with one week so you can verify the mapping before pulling months of history.",
+        "Click <strong>Export</strong> and choose <strong>CSV</strong>. The file lands in your downloads.",
+        "Open the CSV once and confirm the column headers match the field mapping table below before you import anything."
+      ],
+      map: { date: "created_at", direction: "direction", from: "from_number", to: "to_number", contact: "contact_name", duration: "duration", result: "status" }
+    },
+    dialpad: {
+      name: "Dialpad",
+      setup: [
+        "In Dialpad, go to <strong>Admin Settings</strong>, then <strong>Analytics</strong>. Call exports live under analytics, not the main call list.",
+        "Choose <strong>Calls</strong> as the report type and set your date range.",
+        "Click <strong>Export CSV</strong>. Large ranges are emailed to you instead of downloading instantly, so check your inbox if nothing appears.",
+        "For the automated methods, you will also need an API key from <strong>Admin Settings</strong>, then <strong>Authentication</strong>, then <strong>API Keys</strong>."
+      ],
+      map: { date: "date_started", direction: "direction", from: "external_number", to: "internal_number", contact: "contact_name", duration: "duration", result: "call_state" }
+    },
+    openphone: {
+      name: "OpenPhone",
+      setup: [
+        "In OpenPhone, open <strong>Settings</strong>, then <strong>Data and privacy</strong>, and request a <strong>Calls export</strong>. OpenPhone emails you a CSV rather than downloading in the browser.",
+        "For automated methods, generate an API key under <strong>Settings</strong>, then <strong>API</strong>. API access requires a Business plan.",
+        "OpenPhone timestamps are in UTC. Decide now whether you want Airtable to display local time and set the field's time zone accordingly.",
+        "Confirm the export includes all phone numbers on the account, not just your own line, if teammates share the workspace."
+      ],
+      map: { date: "createdAt", direction: "direction", from: "from", to: "to", contact: "contactName", duration: "duration", result: "status" }
+    },
+    ringcentral: {
+      name: "RingCentral",
+      setup: [
+        "In the RingCentral admin portal, go to <strong>Reports</strong>, then <strong>Call Log</strong>.",
+        "Set the date range and click <strong>Download</strong> to get the CSV. RingCentral caps call log history, so schedule a recurring export if you need a complete archive.",
+        "For automated methods, you will connect through the RingCentral app gallery credentials in Make or Zapier, no manual API key needed.",
+        "RingCentral splits inbound and outbound views in some reports. Use the combined call log so direction comes through as a column."
+      ],
+      map: { date: "start_time", direction: "direction", from: "from_number", to: "to_number", contact: "caller_name", duration: "duration", result: "result" }
+    }
+  };
+
+  var SEL2 = {
+    manual: {
+      name: "Manual CSV import",
+      walkthrough: function (o) {
+        return [
+          "In Airtable, open your phone log base and click the table dropdown, then <strong>Import data</strong>, then <strong>CSV file</strong>.",
+          "Upload the export and turn on <strong>Use first row as headers</strong>.",
+          "Map <code>" + o.map.date + "</code> to <strong>Call Date and Time</strong>, <code>" + o.map.from + "</code> to <strong>From Number</strong>, and <code>" + o.map.to + "</code> to <strong>To Number</strong>. Airtable auto-matches exact names only, so expect to set most of these by hand.",
+          "Map <code>" + o.map.duration + "</code> to a <strong>Number</strong> field, not text, so you can sum call time later.",
+          "Choose <strong>Create new records</strong> and finish the import. Spot check 5 records against the source before importing a longer date range."
+        ];
+      }
+    },
+    make: {
+      name: "Make automation",
+      walkthrough: function (o) {
+        return [
+          "Create a new scenario in Make and add your phone system's <strong>Watch calls</strong> module as the trigger. If no native module exists for your system, use the <strong>HTTP</strong> module with the API key from step 1.",
+          "Add an <strong>Airtable, Create a record</strong> module and connect your base and table.",
+          "Map <code>" + o.map.date + "</code> to <strong>Call Date and Time</strong>, <code>" + o.map.direction + "</code> to <strong>Direction</strong>, and <code>" + o.map.contact + "</code> to <strong>Contact Name</strong> using the mapping panel.",
+          "Map <code>" + o.map.duration + "</code> through the <strong>parseNumber()</strong> function so Airtable receives a number, not text.",
+          "Run the scenario once manually to verify one record lands correctly, then set the schedule to every 15 minutes and turn it on."
+        ];
+      }
+    },
+    zapier: {
+      name: "Zapier automation",
+      walkthrough: function (o) {
+        return [
+          "Create a new Zap with your phone system as the trigger app and <strong>New call</strong> (or the closest equivalent) as the trigger event.",
+          "Test the trigger to pull in a recent call. Confirm you can see <code>" + o.map.from + "</code> and <code>" + o.map.to + "</code> in the sample data.",
+          "Add an <strong>Airtable, Create record</strong> action and select your base and table.",
+          "Map <code>" + o.map.date + "</code> to <strong>Call Date and Time</strong>, <code>" + o.map.duration + "</code> to <strong>Duration</strong>, and <code>" + o.map.result + "</code> to <strong>Call Result</strong>.",
+          "Test the action, confirm the record in Airtable, and publish the Zap."
+        ];
+      }
+    }
+  };
+
+  var TROUBLE_BASE = [
+    { q: "Phone numbers import with inconsistent formats.", a: "Standardize on E.164 format (+16025551234) in a formula field rather than editing the source. Consistent formats make lookups and de-duplication reliable." },
+    { q: "Dates land as text instead of a date field.", a: "Change the Airtable field type to Date with time enabled before importing. If dates are already in as text, add a formula field with DATETIME_PARSE() and convert." },
+    { q: "The same call shows up twice.", a: "Add a formula field combining date, from, and to as a unique key, then use a de-dupe extension or filter to catch repeats. Overlapping export date ranges are the usual cause." }
+  ];
+  var TROUBLE_SEL1 = {
+    quo: { q: "The Quo export is missing older calls.", a: "Quo exports respect the date range picker exactly. Widen the range and re-export rather than assuming the file contains full history." },
+    dialpad: { q: "The Dialpad CSV never downloaded.", a: "Larger Dialpad exports are emailed as a download link instead of saving directly. Check the inbox on your admin account, including spam." },
+    openphone: { q: "OpenPhone call times look off by several hours.", a: "OpenPhone exports timestamps in UTC. Set the Airtable date field to display your local time zone instead of editing the values." },
+    ringcentral: { q: "RingCentral history does not go back far enough.", a: "RingCentral retains call logs for a limited window depending on your plan. Set a monthly recurring export so the archive lives in Airtable going forward." }
+  };
+  var TROUBLE_SEL2 = {
+    manual: { q: "Airtable matched columns to the wrong fields.", a: "Auto-matching only works on exact header names. Review every mapping row in the import preview before confirming, especially From and To." },
+    make: { q: "The Make scenario runs but no records appear.", a: "Open the scenario history and check the Airtable module's output bundle. A permissions error on the base connection fails quietly. Reconnect Airtable and re-run." },
+    zapier: { q: "The Zap did not fire for a new call.", a: "Polling triggers can take up to 15 minutes on lower Zapier plans. If it still has not fired, re-test the trigger to confirm the phone system connection is live." }
+  };
+
+  var HAS_SEL2 = true;
+
+  /* ============================================================
+     RENDERING
+     ============================================================ */
+  var state = { s1: null, s2: null };
+
+  function buildPills(containerId, dataObj, onPick) {
+    var c = document.getElementById(containerId);
+    Object.keys(dataObj).forEach(function (key) {
+      var btn = document.createElement("button");
+      btn.className = "pill"; btn.type = "button";
+      btn.setAttribute("aria-pressed", "false");
+      btn.textContent = dataObj[key].name;
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(c.children, function (ch) { ch.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        onPick(key);
+      });
+      c.appendChild(btn);
+    });
+  }
+
+  function render() {
+    var empty = document.getElementById("empty");
+    var guide = document.getElementById("guide");
+
+    var ready = HAS_SEL2 ? (state.s1 && state.s2) : !!state.s1;
+    if (!ready) { empty.style.display = "block"; guide.innerHTML = ""; return; }
+    empty.style.display = "none";
+
+    var o1 = SEL1[state.s1];
+    var o2 = HAS_SEL2 ? SEL2[state.s2] : null;
+    var html = "";
+
+    html += '<p class="guide-summary">Your guide for <strong>' + o1.name + '</strong>' +
+            (o2 ? ' using the <strong>' + o2.name + '</strong> method.' : '.') + '</p>';
+
+    html += '<div class="card"><h2>1. Set up ' + o1.name + '</h2><ol>';
+    o1.setup.forEach(function (s) { html += "<li>" + s + "</li>"; });
+    html += '</ol><div class="callout"><span class="tag">Tip</span>Run your first import on a one-week date range. Verifying 30 records takes minutes. Unwinding 3,000 bad ones takes an afternoon.</div></div>';
+
+    if (o2) {
+      html += '<div class="card"><h2>2. ' + o2.name + ' walkthrough</h2><ol>';
+      o2.walkthrough(o1).forEach(function (s) { html += "<li>" + s + "</li>"; });
+      html += '</ol></div>';
+    }
+
+    html += '<div class="card"><h2>' + (o2 ? '3' : '2') + '. Field mapping reference</h2>';
+    html += '<div class="table-scroll"><table class="map-table"><thead><tr>' +
+            '<th>' + o1.name + ' field</th><th>Airtable field</th></tr></thead><tbody>';
+    DEST_FIELDS.forEach(function (f) {
+      html += '<tr><td><code>' + o1.map[f.key] + '</code></td><td>' + f.dest + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="callout gotcha"><span class="tag">Gotcha</span>Export column names can vary by plan and account settings. Confirm these against your own export or API response before mapping, and re-check after any vendor update.</div></div>';
+
+    var items = [];
+    if (TROUBLE_SEL1[state.s1]) items.push(TROUBLE_SEL1[state.s1]);
+    if (o2 && TROUBLE_SEL2[state.s2]) items.push(TROUBLE_SEL2[state.s2]);
+    items = items.concat(TROUBLE_BASE);
+    html += '<div class="card"><h2>' + (o2 ? '4' : '3') + '. Troubleshooting</h2>';
+    items.forEach(function (it) {
+      html += '<div class="trouble-item"><p class="q">' + it.q + '</p><p class="a">' + it.a + '</p></div>';
+    });
+    html += '</div>';
+
+    guide.innerHTML = html;
+    guide.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  buildPills("sel-1", SEL1, function (k) { state.s1 = k; render(); });
+  if (HAS_SEL2) {
+    buildPills("sel-2", SEL2, function (k) { state.s2 = k; render(); });
+  } else {
+    var g2 = document.getElementById("sel-2");
+    if (g2 && g2.parentElement) g2.parentElement.remove();
+  }
+})();
+</script>
+</body>
+</html>
