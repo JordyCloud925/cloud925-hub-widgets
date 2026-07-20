@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set up your first firm Project in Claude</title>
+<style>
+  :root {
+    --c-primary: #a2cffe;
+    --c-deep: #044487;
+    --c-rich: #055bb5;
+    --c-soft: #d6eaff;
+    --c-callout-bg: #f4f9ff;
+    --c-ink: #1c2b3a;
+    --c-muted: #5b6b7c;
+    --c-line: #e3eefb;
+    --c-white: #ffffff;
+    --shadow: 0 2px 14px rgba(4, 68, 135, 0.08);
+    --radius: 12px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: var(--font); color: var(--c-ink); background: var(--c-white); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+  .page-head h1 { font-size: 28px; font-weight: 700; color: var(--c-deep); margin: 0 0 6px; letter-spacing: -0.01em; }
+  .page-head p { margin: 0 0 28px; color: var(--c-muted); font-size: 16px; }
+  .selector-card { background: var(--c-callout-bg); border: 1px solid var(--c-line); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); }
+  .selector-group { margin-bottom: 0; }
+  .selector-label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-rich); margin-bottom: 10px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pill { appearance: none; border: 1.5px solid var(--c-primary); background: var(--c-white); color: var(--c-deep); font-family: var(--font); font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: 999px; cursor: pointer; transition: all 0.15s ease; }
+  .pill:hover { background: var(--c-soft); }
+  .pill[aria-pressed="true"] { background: var(--c-rich); border-color: var(--c-rich); color: var(--c-white); }
+  .empty-state { margin-top: 36px; text-align: center; padding: 56px 24px; color: var(--c-muted); }
+  .empty-state .arrow { font-size: 32px; color: var(--c-primary); display: block; margin-bottom: 12px; }
+  .empty-state p { margin: 0; font-size: 17px; font-weight: 500; color: var(--c-rich); }
+  #guide { margin-top: 36px; }
+  .guide-summary { font-size: 14px; color: var(--c-muted); margin-bottom: 18px; }
+  .guide-summary strong { color: var(--c-deep); }
+  .card { background: var(--c-white); border: 1px solid var(--c-line); border-radius: var(--radius); padding: 26px 28px; box-shadow: var(--shadow); margin-bottom: 22px; }
+  .card h2 { font-size: 19px; font-weight: 700; color: var(--c-deep); margin: 0 0 16px; letter-spacing: -0.01em; }
+  .card ol, .card ul { margin: 0; padding-left: 22px; }
+  .card ol li, .card ul li { margin-bottom: 12px; }
+  .card code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 13px; background: var(--c-soft); color: var(--c-deep); padding: 2px 6px; border-radius: 5px; }
+  .map-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .map-table th { background: var(--c-soft); color: var(--c-deep); text-align: left; font-weight: 600; padding: 11px 14px; border: 1px solid var(--c-line); }
+  .map-table td { padding: 11px 14px; border: 1px solid var(--c-line); vertical-align: top; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .callout { border-left: 4px solid var(--c-primary); background: var(--c-callout-bg); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0 0; font-size: 14px; }
+  .callout.gotcha { border-left-color: var(--c-rich); }
+  .callout .tag { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-rich); margin-bottom: 4px; }
+  .trouble-item { margin-bottom: 16px; }
+  .trouble-item:last-child { margin-bottom: 0; }
+  .trouble-item .q { font-weight: 600; color: var(--c-deep); margin: 0 0 4px; }
+  .trouble-item .a { margin: 0; color: var(--c-ink); }
+  /* Copyable instructions block */
+  .ci-wrap { position: relative; }
+  .ci-block { background: #0b2b4a; color: #eaf3ff; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 13px; line-height: 1.55; padding: 18px 20px; border-radius: 10px; white-space: pre-wrap; margin: 0; overflow-x: auto; }
+  .copy-btn { position: absolute; top: 12px; right: 12px; appearance: none; border: none; background: var(--c-primary); color: var(--c-deep); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 7px; cursor: pointer; transition: all 0.15s ease; }
+  .copy-btn:hover { background: var(--c-soft); }
+  .copy-btn.done { background: #2e9e5b; color: #fff; }
+  @media (max-width: 560px) {
+    .wrap { padding: 24px 16px 64px; }
+    .page-head h1 { font-size: 23px; }
+    .card { padding: 20px 18px; }
+    .selector-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <h1>Set up your first firm Project in Claude</h1>
+    <p>Pick your practice area and get a tailored setup, custom instructions to paste, and the files to add.</p>
+  </div>
+
+  <div class="selector-card">
+    <div class="selector-group">
+      <span class="selector-label">Your practice area</span>
+      <div class="pills" id="sel-1"></div>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty">
+    <span class="arrow">&uarr;</span>
+    <p>Pick your practice area above</p>
+  </div>
+
+  <div id="guide"></div>
+</div>
+
+<script>
+(function () {
+  /* ============================================================
+     EDIT ONLY THIS DATA SECTION.
+     ============================================================ */
+
+  // Shared setup steps, identical for every practice area.
+  var SETUP = [
+    "Open Claude, then click <strong>Projects</strong> in the left sidebar and choose <strong>New project</strong>.",
+    "Name it so your team knows what it is, like <code>[Firm name]: [practice area] matters</code>.",
+    "Add a one line description of what belongs in this Project.",
+    "Open the Project <strong>instructions</strong> and paste the block in section 2.",
+    "Under <strong>Project knowledge</strong>, upload the files listed in section 3.",
+    "Start a new chat from inside the Project and test it on a real task before you rely on it."
+  ];
+
+  // One object per practice area.
+  //   name  = pill label
+  //   ci    = custom instructions to paste (plain text, copyable)
+  //   files = [ [file, why it helps], ... ]
+  //   trouble = one issue specific to this area
+  var AREAS = {
+    family: {
+      name: "Family law",
+      ci: "You are a drafting and summarizing assistant for [Firm name], a family law firm in [state].\n\nWhat we handle: divorce, custody, support, and related family matters.\n\nHow to work:\n- Never invent facts. If a detail is missing, list it under \"Open questions\" instead of guessing.\n- Write in plain language a client can understand. Clear, never condescending.\n- Flag anything that looks like a deadline or filing date at the top of your response.\n- Do not guess statutes or case citations. Use only citations I give you, and tell me to verify before filing.\n- Treat every matter as confidential. Refer to clients by initials in summaries.",
+      files: [
+        ["Your intake questionnaire", "So Claude knows what facts a new matter needs"],
+        ["Your retainer or fee agreement", "For first drafts of engagement letters"],
+        ["Your parenting plan template", "So drafts match your format, not a generic one"],
+        ["Financial disclosure checklist", "To spot missing items in a client's disclosure"]
+      ],
+      trouble: { q: "It produced a statute citation I cannot verify.", a: "Add a line to the instructions telling it never to guess citations, and paste the statute text yourself. Verify every citation before filing." }
+    },
+    estate: {
+      name: "Estate planning",
+      ci: "You are a drafting and summarizing assistant for [Firm name], an estate planning firm in [state].\n\nWhat we handle: wills, trusts, powers of attorney, and estate administration.\n\nHow to work:\n- Never invent client or asset details. Missing items go under \"Open questions\".\n- Follow [state] execution requirements from the file in Project knowledge. Do not rely on general rules.\n- Write in plain language, then note where a client should get specific advice from us.\n- Flag any date, funding step, or beneficiary gap you notice.\n- Treat every matter as confidential. Refer to clients by initials in summaries.",
+      files: [
+        ["Client intake and asset inventory form", "So drafts start from complete information"],
+        ["Your will and trust templates", "To draft from your language, not a generic template"],
+        ["State execution requirements note", "So signing and witnessing steps are correct"],
+        ["Fee schedule", "For accurate fee language in engagement letters"]
+      ],
+      trouble: { q: "It applied the wrong state's signing rules.", a: "State execution rules live in your knowledge file. Confirm that file is current and name the state in your prompt every time." }
+    },
+    pi: {
+      name: "Personal injury",
+      ci: "You are a drafting and summarizing assistant for [Firm name], a personal injury firm in [state].\n\nWhat we handle: auto, premises, and related injury claims.\n\nHow to work:\n- Never invent facts, dates, or dollar figures. Missing items go under \"Open questions\".\n- Do not calculate damages or totals on your own. Use figures I provide and show your work so I can check it.\n- Pull and list every date, deadline, and statute of limitations concern you see.\n- Write demand and correspondence drafts in a firm, professional tone.\n- Treat every matter as confidential. Refer to clients by initials in summaries.",
+      files: [
+        ["Intake and incident questionnaire", "So Claude captures the full incident picture"],
+        ["Medical records request template", "To draft requests in your format"],
+        ["Your demand letter template", "So demand drafts match your structure"],
+        ["Lien and settlement checklist", "To flag liens and authority items before settlement"]
+      ],
+      trouble: { q: "The numbers in a demand draft look off.", a: "Claude is not a calculator to trust blind. Give it the figures, tell it to show its math, and check every total yourself." }
+    },
+    business: {
+      name: "Business & transactional",
+      ci: "You are a drafting and summarizing assistant for [Firm name], a business and transactional firm in [state].\n\nWhat we handle: entity formation, contracts, and ongoing business counsel.\n\nHow to work:\n- Never invent terms, parties, or numbers. Missing items go under \"Open questions\".\n- When drafting from our templates, preserve the exact operative language. Only change the bracketed fields unless I ask otherwise.\n- Flag any term that shifts risk, liability, or payment before I send it.\n- Write in clear business language a founder can follow.\n- Treat every matter as confidential. Refer to clients by initials in summaries.",
+      files: [
+        ["Client and entity intake form", "So drafts capture the right parties and structure"],
+        ["Your contract templates (NDA, services agreement)", "To draft from your language"],
+        ["Formation checklist by entity type", "So formation steps are complete and correct"],
+        ["Fee and scope template", "For accurate engagement and scope language"]
+      ],
+      trouble: { q: "It softened contract language I needed to stay firm.", a: "Tell it to preserve the exact operative terms from your template and change only the bracketed fields. Review any wording change before sending." }
+    },
+    general: {
+      name: "General practice",
+      ci: "You are a drafting and summarizing assistant for [Firm name], a general practice firm in [state].\n\nHow to work:\n- Never invent facts, dates, parties, or figures. Missing items go under \"Open questions\".\n- Do not guess citations or legal rules. Use only what I provide and tell me to verify.\n- Flag any deadline, filing date, or dollar figure you notice.\n- Write in plain language a client can understand.\n- Treat every matter as confidential. Refer to clients by initials in summaries.",
+      files: [
+        ["Your firm intake form", "So Claude knows what a new matter needs"],
+        ["Your most-used document templates", "To draft from your format"],
+        ["Matter-opening checklist", "To keep new matters consistent"],
+        ["Fee agreement template", "For first drafts of engagement letters"]
+      ],
+      trouble: { q: "Answers drift off-topic across a long chat.", a: "Start a fresh chat inside the Project for each new matter. That keeps the context clean and the instructions sharp." }
+    }
+  };
+
+  // Issues that apply no matter which area you pick.
+  var TROUBLE_BASE = [
+    { q: "Claude ignores my instructions.", a: "Make sure you opened the chat from inside the Project, not a regular new chat. Instructions only apply to chats started within the Project." },
+    { q: "It referenced a file I did not add.", a: "Claude only sees files under Project knowledge. Check the file is uploaded, and remove outdated versions so it does not pull from an old one." },
+    { q: "My whole team needs this setup.", a: "On team and enterprise plans you can share a Project. Build it once, share it, and everyone works from the same instructions and files." }
+  ];
+
+  /* ============================================================
+     RENDERING.
+     ============================================================ */
+  var state = { s1: null };
+
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  function buildPills(containerId, dataObj, onPick) {
+    var c = document.getElementById(containerId);
+    Object.keys(dataObj).forEach(function (key) {
+      var btn = document.createElement("button");
+      btn.className = "pill"; btn.type = "button";
+      btn.setAttribute("aria-pressed", "false");
+      btn.textContent = dataObj[key].name;
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(c.children, function (ch) { ch.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        onPick(key);
+      });
+      c.appendChild(btn);
+    });
+  }
+
+  function render() {
+    var empty = document.getElementById("empty");
+    var guide = document.getElementById("guide");
+    if (!state.s1) { empty.style.display = "block"; guide.innerHTML = ""; return; }
+    empty.style.display = "none";
+
+    var a = AREAS[state.s1];
+    var html = "";
+    html += '<p class="guide-summary">Your setup for a <strong>' + a.name + '</strong> firm.</p>';
+
+    // Section 1: setup
+    html += '<div class="card"><h2>1. Create your Project</h2><ol>';
+    SETUP.forEach(function (s) { html += "<li>" + s + "</li>"; });
+    html += '</ol><div class="callout"><span class="tag">Tip</span>Do this once. Every chat you start inside the Project will follow these instructions and see these files.</div></div>';
+
+    // Section 2: custom instructions (copyable)
+    html += '<div class="card"><h2>2. Custom instructions to paste</h2>';
+    html += '<p style="margin:0 0 14px;color:var(--c-muted);font-size:14px;">Paste this into the Project instructions, then swap the bracketed fields for your firm.</p>';
+    html += '<div class="ci-wrap"><button class="copy-btn" type="button" data-ci>Copy</button>';
+    html += '<pre class="ci-block" data-ci-text>' + esc(a.ci) + '</pre></div>';
+    html += '<div class="callout gotcha"><span class="tag">Gotcha</span>Replace every bracketed field before you rely on it. The instructions are a starting point, not a finished policy.</div></div>';
+
+    // Section 3: knowledge files table
+    html += '<div class="card"><h2>3. Files to add under Project knowledge</h2>';
+    html += '<div class="table-scroll"><table class="map-table"><thead><tr><th>File to add</th><th>Why it helps</th></tr></thead><tbody>';
+    a.files.forEach(function (f) { html += '<tr><td>' + f[0] + '</td><td>' + f[1] + '</td></tr>'; });
+    html += '</tbody></table></div>';
+    html += '<div class="callout"><span class="tag">Tip</span>Add your real templates, not samples. Claude drafts from what you give it, so your own documents produce your own output.</div></div>';
+
+    // Section 4: troubleshooting
+    var items = [a.trouble].concat(TROUBLE_BASE);
+    html += '<div class="card"><h2>4. Troubleshooting</h2>';
+    items.forEach(function (it) { html += '<div class="trouble-item"><p class="q">' + it.q + '</p><p class="a">' + it.a + '</p></div>'; });
+    html += '</div>';
+
+    guide.innerHTML = html;
+
+    // wire copy button
+    var btn = guide.querySelector('[data-ci]');
+    var txt = guide.querySelector('[data-ci-text]');
+    if (btn && txt) {
+      btn.addEventListener('click', function () {
+        var t = txt.textContent;
+        var done = function () { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1800); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(t).then(done, function () { fallback(t); done(); });
+        } else { fallback(t); done(); }
+      });
+    }
+    function fallback(t) {
+      var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
+    }
+
+    guide.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  buildPills("sel-1", AREAS, function (k) { state.s1 = k; render(); });
+})();
+</script>
+</body>
+</html>
